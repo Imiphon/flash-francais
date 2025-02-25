@@ -1,25 +1,33 @@
-import logo from './logo.svg';
-import './App.css';
+import "./styles.css";
+import { useState } from "react";
+import Navigation from "./Navigation";
+import FlashCards from "./FlashCards";
 
-function App() {
+export default function App() {
+  const [lang, setLang] = useState("de");
+  const [theme, setTheme] = useState("qc");
+
+  function handleChangeLang(e) {
+    console.log("Language is: ", e.target.value);
+    setLang(e.target.value);
+  }
+
+  function handleChangeTheme(e) {
+    console.log("Theme is: ", e.target.value);
+    setTheme(e.target.value);
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <main>
+        <Navigation
+          lang={lang}
+          theme={theme}
+          onChangeLang={handleChangeLang}
+          onChangeTheme={handleChangeTheme}
+        />
+        <FlashCards lang={lang} theme={theme} />
+      </main>
     </div>
   );
 }
-
-export default App;
