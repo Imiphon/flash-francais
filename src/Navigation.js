@@ -38,7 +38,11 @@ useEffect(() => {
   return (
     <div className="header">
       <div className="nav-left">
-        <img src="/assets/images/favicon-96x96.png" alt="logo" />
+      <img 
+  src={process.env.PUBLIC_URL + "/assets/images/favicon-96x96.png"} 
+  alt="logo" 
+/>
+
         <span>FLASH FRANÇAISE</span>
       </div>
 
@@ -63,7 +67,7 @@ useEffect(() => {
       </div>
 
       <div className="nav-right">
-        <img src="/assets/images/activity-feed-64.png" alt="Burger" onClick={handleDropdown}/>
+        <img src={process.env.PUBLIC_URL + "/assets/images/activity-feed-64.png"} alt="Burger" onClick={handleDropdown}/>
         {isDropdown && <div className="dropdown" ref={dropdownRef}>
           <div className="select-nav">
           <label>leçon: </label>

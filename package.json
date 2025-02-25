@@ -1,6 +1,7 @@
 {
   "name": "flash-francais",
   "version": "0.1.0",
+  "homepage": "https://www.mensching.online/flash-francais/",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
