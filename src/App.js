@@ -4,7 +4,7 @@ import Navigation from "./Navigation";
 import FlashCards from "./FlashCards";
 
 export default function App() {
-  const [lang, setLang] = useState("de");
+  const [lang, setLang] = useState("de-DE");
   const [theme, setTheme] = useState("qc");
 
   function handleChangeLang(e) {
@@ -19,13 +19,15 @@ export default function App() {
 
   return (
     <div className="App">
-      <main>
+      <header>
         <Navigation
           lang={lang}
           theme={theme}
           onChangeLang={handleChangeLang}
           onChangeTheme={handleChangeTheme}
         />
+      </header>
+      <main>
         <FlashCards lang={lang} theme={theme} />
       </main>
     </div>

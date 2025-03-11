@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
+import { useSwipeable } from "react-swipeable";
 import { getQuestData, getCurrentCard } from "./questData";
-
 
 export default function FlashCards({ lang, theme }) {
   const [activeCardId, setActiveCardId] = useState(1);
   const [isFlipped, setFlipped] = useState(false);
   const [isFront, setIsFront] = useState(true);
-  const [showExpl, setShowExpl] = useState(false);
-  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 640);
+  const [isShowExpl, setIsShowExpl] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
   const [isBlue, setIsBlue] = useState(true);
 
   const flashFrameRef = useRef(null);
@@ -28,26 +28,88 @@ export default function FlashCards({ lang, theme }) {
     }
   }
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (!isShowExpl) handleNext();
+    },
+    onSwipedRight: () => {
+      if (!isShowExpl) handlePrev();
+    },
+    trackMouse: true,
+    preventDefaultTouchmoveEvent: true,
+    threshold: 15,
+  });
+
   function handleToggleSide() {
+    if (isShowExpl) return;
     setIsFront((prev) => !prev);
+    setIsShowExpl(false);
   }
 
   function handleFlipp() {
+    setIsShowExpl(false);
+    setIsBlue(true);
     setFlipped((prev) => !prev);
   }
 
   function handleExplanation() {
-    setShowExpl((prev) => !prev);
-  }
-
-  function handleBtnColor(){
+    setIsShowExpl((prev) => !prev);
     setIsBlue((prev) => !prev);
   }
+
+  function handleSlide(e) {
+    const newVal = parseInt(e.target.value, 10);
+    setActiveCardId(newVal);
+    setIsFront(true);
+    setFlipped(false);
+    setIsShowExpl(false);
+    setIsBlue(true);
+  }
+
+
+  // Optional: Stimme, Lautstärke, Sprechgeschwindigkeit und Tonhöhe anpassen
+  // utterance.volume = 1; // 0 bis 1
+  // utterance.rate = 1;   // 0.1 bis 10
+  // utterance.pitch = 1;  // 0 bis 2
+  function handlePlay(e) {
+    e.stopPropagation();
+  
+    const textToPlay = isShowExpl 
+      ? currentCard.expl 
+      : (isFlipped ? currentCard.answer : currentCard.question);
+      
+    let langCode = isFlipped ? lang : "fr-CA";
+   
+    const utterance = new SpeechSynthesisUtterance(textToPlay);
+    utterance.lang = langCode;
+    let voices = window.speechSynthesis.getVoices();
+    if (!voices.length) {//wait for cur lang
+      window.speechSynthesis.onvoiceschanged = () => {
+        voices = window.speechSynthesis.getVoices();
+        const selectedVoice = voices.find(v => v.lang === langCode);
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+        window.speechSynthesis.speak(utterance);
+      };
+    } else {
+      const selectedVoice = voices.find(v => v.lang === langCode);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+  
 
   // 1) Window Resize -> setIsSmallScreen
   useEffect(() => {
     function checkScreenSize() {
-      setIsSmallScreen(window.innerWidth <= 640);
+      const hasTouch =
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0 ||
+        navigator.msMaxTouchPoints > 0;
+      setIsTouch(hasTouch);
     }
     // call with start
     checkScreenSize();
@@ -58,27 +120,7 @@ export default function FlashCards({ lang, theme }) {
       window.removeEventListener("resize", checkScreenSize);
     };
   }, []);
-
-  // 2) Click-Outside, only on Mobile
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (
-        flashFrameRef.current &&
-        !flashFrameRef.current.contains(e.target)
-      ) {
-        setShowExpl(false);
-      }
-    }
-    if (isSmallScreen) {
-      document.addEventListener("click", handleClickOutside);
-    }
-    return () => {
-      if (isSmallScreen) {
-        document.removeEventListener("click", handleClickOutside);
-      }
-    };
-  }, [isSmallScreen]);
-
+  
   return (
     <div className="flash-frame" ref={flashFrameRef}>
       <div style={{ marginBottom: "12px", fontSize: "12px" }} className="row">
@@ -94,8 +136,9 @@ export default function FlashCards({ lang, theme }) {
       <div
         className={`flashcard ${isFlipped ? "selected" : ""}`}
         onClick={handleFlipp}
+        {...swipeHandlers}
       >
-        {showExpl ? (
+        {isShowExpl ? (
           <p className="expl-p">{currentCard.expl}</p>
         ) : (
           <p className="first-p">
@@ -103,33 +146,51 @@ export default function FlashCards({ lang, theme }) {
           </p>
         )}
         {currentCard.expl && !isFlipped && (
+          
           <button
-            className="expl-btn" style={!isBlue ? {backgroundColor:"red"}: {}}
+            className="expl-btn"
+            style={!isBlue ? { backgroundColor: "red" } : {}}
             // HOVER on monitor
             onMouseEnter={(e) => {
-              if (!isSmallScreen) {
+              if (!isTouch) {
                 e.stopPropagation();
                 handleExplanation();
               }
             }}
             onMouseLeave={(e) => {
-              if (!isSmallScreen) {
+              if (!isTouch) {
                 e.stopPropagation();
                 handleExplanation();
               }
             }}
             // CLICK on mobile
             onClick={(e) => {
-              if (isSmallScreen) {
+              if (isTouch) {
                 e.stopPropagation();
                 handleExplanation();
-                handleBtnColor();
+                console.log("click ");
               }
             }}
           >
             ?
           </button>
         )}
+        <button className="play-btn" onClick={(e)=>handlePlay(e)}>
+        <img src={process.env.PUBLIC_URL + "/assets/images/play-white.png"} alt="play"/>
+        </button>
+      </div>
+
+      <div className="slider-frame">
+        <input
+          type="range"
+          min="1"
+          max={data.length}
+          value={activeCardId}
+          onChange={(e) => {
+            handleSlide(e);
+          }}
+        ></input>
+        <span>Card Nr.: {activeCardId}</span>
       </div>
 
       <div className="row">

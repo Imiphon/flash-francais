@@ -3,6 +3,7 @@ import {
   questHome,
   questMed,
   questFeel,
+  questAct,
 } from "./content-base";
 
 import { questAnswersDE } from "./lang-de";
@@ -22,7 +23,7 @@ function mergeData(baseArray, answersArray) {
 export function getQuestData(lang, theme) {
   let baseData = [];
   let answers = [];
-  
+
   switch (theme) {
     case "qc":
       baseData = questQc;
@@ -33,27 +34,30 @@ export function getQuestData(lang, theme) {
     case "med":
       baseData = questMed;
       break;
-    case "sense":
+    case "feel":
       baseData = questFeel;
+      break;
+    case "act":
+      baseData = questAct;
       break;
     default:
       baseData = [];
   }
-  
+
   switch (lang) {
-    case "de":
-      answers = questAnswersDE[theme];
+    case "de-DE":
+      answers = questAnswersDE[theme]; //["theme"] is 'value' from select in nav
       break;
-    case "en":
+    case "en-US":
       answers = questAnswersEN[theme];
       break;
-    case "sp":
+    case "es-ES":
       answers = questAnswersSP[theme];
       break;
     default:
       answers = [];
   }
-  
+
   return mergeData(baseData, answers);
 }
 
